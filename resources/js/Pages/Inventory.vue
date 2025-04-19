@@ -16,7 +16,9 @@ import { Head } from "@inertiajs/vue3";
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div class="p-6 text-gray-900">Select your module</div>
+                    <div class="p-6 text-gray-900">
+                        Welcome, You're logged in as Inventory
+                    </div>
                 </div>
             </div>
         </div>

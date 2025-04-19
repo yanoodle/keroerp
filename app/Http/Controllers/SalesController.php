@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Sales;
 use App\Http\Requests\StoreSalesRequest;
 use App\Http\Requests\UpdateSalesRequest;
+use Inertia\Inertia;
 
 class SalesController extends Controller
 {
@@ -13,7 +14,7 @@ class SalesController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Sales');
     }
 
     /**

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Purchasing;
 use App\Http\Requests\StorePurchasingRequest;
 use App\Http\Requests\UpdatePurchasingRequest;
+use Inertia\Inertia;
 
 class PurchasingController extends Controller
 {
@@ -13,7 +14,7 @@ class PurchasingController extends Controller
      */
     public function index()
     {
-        //
+        return Inertia::render('Purchase');
     }
 
     /**
