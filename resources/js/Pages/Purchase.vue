@@ -15,13 +15,21 @@ import { Head } from '@inertiajs/vue3';
             </h2>
         </template>
 
-        <div class="py-12">
+        <div class="py-12" v-if="$page.props.auth.user.role === 'Purchase'">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div
-                    class="overflow-hidden bg-white shadow-sm sm:rounded-lg"
-                >
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
                     <div class="p-6 text-gray-900">
-                        Welcome, You're logged in as Purchasing
+                        Welcome, You're logged in as Inventory
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="py-12" v-else>
+            <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
+                    <div class="p-6 text-gray-900">
+                        You're not authorized here...
                     </div>
                 </div>
             </div>
