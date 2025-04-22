@@ -9,4 +9,9 @@ class Purchasing extends Model
 {
     /** @use HasFactory<\Database\Factories\PurchasingFactory> */
     use HasFactory;
+    protected $fillable = [
+        'purchase_date',
+        'quantity',
+        'price',
+        'status',];
 }

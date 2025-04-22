@@ -9,4 +9,9 @@ class Sales extends Model
 {
     /** @use HasFactory<\Database\Factories\SalesFactory> */
     use HasFactory;
+    protected $fillable = [
+        'sale_date',
+        'quantity',
+        'price',
+        'status',];
 }
