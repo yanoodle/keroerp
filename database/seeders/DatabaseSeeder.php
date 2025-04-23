@@ -15,19 +15,17 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
+        $this->call([
+            ProductsSeeder::class,
+            PurchasingSeeder::class,
+            SalesSeeder::class,
+        ]);
+
         User::factory()->create([
             'name' => 'Sales',
             'email' => 'sales@kero.com',
             'password' => '123123123',
             'role' => 'Sales'
-
-        ]);
-
-        User::factory()->create([
-            'name' => 'Inventory',
-            'email' => 'inven@kero.com',
-            'password' => '123123123',
-            'role' => 'Inven'
 
         ]);
 

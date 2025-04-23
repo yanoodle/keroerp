@@ -15,7 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->text('description')->nullable();
-            $table->integer('quantity');
+            $table->integer('base_qty');
+            $table->integer('in_demand_qty');
             $table->bigInteger('price');
             $table->timestamps();
         });
