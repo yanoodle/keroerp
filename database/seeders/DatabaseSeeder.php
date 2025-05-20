@@ -36,5 +36,13 @@ class DatabaseSeeder extends Seeder
             'role' => 'Purchase'
 
         ]);
+
+        User::factory()->create([
+            'name' => 'Admin',
+            'email' => 'admin@kero.com',
+            'password' => '123123123',
+            'role' => 'Admin'
+
+        ]);
     }
 }

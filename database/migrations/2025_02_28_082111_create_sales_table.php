@@ -13,11 +13,10 @@ return new class extends Migration
     {
         Schema::create('sales', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->dateTime('sale_date');
+            $table->string('product');
             $table->integer('quantity');
             $table->bigInteger('price');
-            $table->enum('status', ['Pending', 'Processing', 'Shipped', 'Delivered', 'Completed', 'Canceled', 'Refunded']);
+            $table->enum('status', ['Pending', 'Approved', 'Shipped', 'Received', 'Completed', 'Canceled', 'Refunded']);
             $table->timestamps();
         });
     }

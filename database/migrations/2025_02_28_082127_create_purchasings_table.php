@@ -11,13 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('purchases', function (Blueprint $table) {
+        Schema::create('purchasings', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('product_id')->constrained('products')->onDelete('cascade');
-            $table->dateTime('purchase_date');
+            $table->string('product');
             $table->integer('quantity');
             $table->bigInteger('price');
-            $table->enum('status', ['Pending', 'Approved', 'Ordered', 'Shipped', 'Received', 'Completed', 'Canceled']);
+            $table->enum('status', ['Pending', 'Approved', 'Shipped', 'Received', 'Completed', 'Canceled', 'Refunded']);
             $table->timestamps();
         });
     }

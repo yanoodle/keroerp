@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Purchasing;
 use App\Http\Requests\StorePurchasingRequest;
 use App\Http\Requests\UpdatePurchasingRequest;
+use App\Models\Products;
 use Inertia\Inertia;
 
 class PurchasingController extends Controller
@@ -14,7 +15,12 @@ class PurchasingController extends Controller
      */
     public function index()
     {
-        return Inertia::render('Purchase');
+        $purchases = Purchasing::all();
+        $inventories = Products::all();
+        return Inertia::render('Purchase', [
+            'purchases' => $purchases,
+            'inventories' => $inventories,
+        ]);
     }
 
     /**
@@ -30,7 +36,7 @@ class PurchasingController extends Controller
      */
     public function store(StorePurchasingRequest $request)
     {
-        //
+        
     }
 
     /**

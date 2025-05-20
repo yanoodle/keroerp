@@ -102,10 +102,17 @@ const deleteInventory = (inventory) => {
             }
         });
 };
+
+const formatToIDR = (value) => {
+    return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+    }).format(value);
+};
 </script>
 
 <template>
-    <Head title="Dashboard" />
+    <Head title="Inventory" />
 
     <AuthenticatedLayout>
         <template #header>
@@ -120,8 +127,12 @@ const deleteInventory = (inventory) => {
                     <div class="p-6 text-gray-900">
                         Welcome, You're logged in as Inventory
                     </div>
-                    <div class="p-6 text-gray-900">
-                        <PrimaryButton @click="($event) => openModal(1)">
+
+                    <div
+                        v-if="$page.props.auth.user.role === 'Admin'"
+                        class="p-6 text-gray-900"
+                    >
+                        <PrimaryButton @click="openModal(1)">
                             Add
                         </PrimaryButton>
                     </div>
@@ -169,7 +180,9 @@ const deleteInventory = (inventory) => {
                                 <td class="px-6 py-4">
                                     {{ inv.in_demand_qty }}
                                 </td>
-                                <td class="px-6 py-4">{{ inv.price }}</td>
+                                <td class="px-6 py-4">
+                                    {{ formatToIDR(inv.price) }}
+                                </td>
                                 <td class="px-6 py-4">
                                     <WarningButton
                                         @click="
@@ -190,6 +203,10 @@ const deleteInventory = (inventory) => {
                                 </td>
                                 <td class="px-6 py-4">
                                     <DangerButton
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'Admin'
+                                        "
                                         @click="
                                             ($event) => deleteInventory(inv)
                                         "
@@ -246,7 +263,7 @@ const deleteInventory = (inventory) => {
                     v-model="form.base_qty"
                     type="text"
                     class="mt-1 block w-3/4"
-                    placeholder="base_qty"
+                    placeholder="Base Qty"
                 ></TextInput>
                 <InputError
                     :message="form.errors.base_qty"
