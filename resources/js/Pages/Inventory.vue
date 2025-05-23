@@ -185,6 +185,10 @@ const formatToIDR = (value) => {
                                 </td>
                                 <td class="px-6 py-4">
                                     <WarningButton
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'Admin'
+                                        "
                                         @click="
                                             ($event) =>
                                                 openModal(

@@ -42,7 +42,6 @@ class DatabaseSeeder extends Seeder
             'email' => 'admin@kero.com',
             'password' => '123123123',
             'role' => 'Admin'
-
         ]);
     }
 }

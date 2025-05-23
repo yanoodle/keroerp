@@ -6,6 +6,7 @@ use App\Models\Sales;
 use App\Http\Requests\StoreSalesRequest;
 use App\Http\Requests\UpdateSalesRequest;
 use App\Models\Products;
+use App\Models\Purchasing;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -43,18 +44,19 @@ class SalesController extends Controller
             'price' => 'required|numeric',
             'status' => 'required'
         ]);
-    
+
         $saleData = $request->only(['product', 'quantity', 'price', 'status']);
-    
         Sales::create($saleData);
-    
+
         $product = Products::where('name', $request->product)->first();
-    
+
         if ($product) {
-            $product->in_demand_qty += (int) $request->quantity;
+            $product->in_demand_qty += (int)$request->quantity;
             $product->save();
+
+            $this->adjustPurchasing($product);
         }
-    
+
         return redirect('sales');
     }
 
@@ -85,16 +87,29 @@ class SalesController extends Controller
             'price' => 'required|numeric',
             'status' => 'required'
         ]);
-    
+
         $product = Products::where('name', $request->product)->first();
-    
-        if ($product) {
-            $product->in_demand_qty += (int) $request->quantity;
-            $product->save();
+
+        if (!$product) {
+            return redirect('sales')->withErrors('Product not found.');
         }
-    
+
+        // Calculate quantity difference between old and new
+        $qtyDiff = (int)$request->quantity - $sale->quantity;
+
+        // Update in-demand qty accordingly
+        $product->in_demand_qty += $qtyDiff;
+        if ($product->in_demand_qty < 0) {
+            $product->in_demand_qty = 0;
+        }
+        $product->save();
+
+        // Update the sale record
         $sale->update($request->all());
-    
+
+        // Adjust purchasing based on new demand
+        $this->adjustPurchasing($product);
+
         return redirect('sales');
     }
 
@@ -104,19 +119,54 @@ class SalesController extends Controller
     public function destroy(Sales $sale)
     {
         $product = Products::where('name', $sale->product)->first();
-    
+
         if ($product) {
+            // Reduce in-demand quantity
             $product->in_demand_qty -= $sale->quantity;
-    
             if ($product->in_demand_qty < 0) {
                 $product->in_demand_qty = 0;
             }
-    
             $product->save();
+
+            // Adjust purchasing accordingly
+            $this->adjustPurchasing($product);
         }
-    
+
         $sale->delete();
-    
+
         return redirect('sales');
+    }
+
+    private function adjustPurchasing(Products $product)
+    {
+        // Calculate how much needs to be purchased
+        $needed = $product->in_demand_qty - $product->base_qty;
+
+        // Find existing pending purchasing entry for the product
+        $purchasing = Purchasing::where('product', $product->name)
+            ->where('status', 'Pending')
+            ->first();
+
+        if ($needed > 0) {
+            if ($purchasing) {
+                // Update existing purchasing quantity
+                $purchasing->quantity = $needed;
+                $purchasing->price = $product->price;
+                $purchasing->save();
+            } else {
+                // Create new purchasing entry
+                Purchasing::create([
+                    'product' => $product->name,
+                    'quantity' => $needed,
+                    'price' => $product->price,
+                    'status' => 'Pending',
+                ]);
+            }
+        } else {
+            // No need to purchase, delete existing pending purchasing if any
+            if ($purchasing) {
+                $purchasing->delete();
+            }
+        }
     }
 }

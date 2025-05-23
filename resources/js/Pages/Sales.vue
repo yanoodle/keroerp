@@ -26,7 +26,7 @@ const form = useForm({
     product: "",
     quantity: "",
     price: "",
-    status: "",
+    status: "Pending",
 });
 const formPage = useForm({});
 const onPageClick = (event) => {
@@ -285,7 +285,7 @@ watch(
                     class="mt-2"
                 ></InputError>
             </div>
-            <div class="p-3">
+            <div class="p-3" v-if="title === 'Edit Entry'">
                 <InputLabel for="status" value="Status"></InputLabel>
                 <select
                     id="status"

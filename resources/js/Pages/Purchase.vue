@@ -117,6 +117,8 @@ watch(
         form.price = basePrice * qty;
     }
 );
+
+const isEditMode = computed(() => title.value === "Edit Entry");
 </script>
 
 <template>
@@ -141,7 +143,10 @@ watch(
                     <div class="p-6 text-gray-900">
                         Welcome, You're logged in as Purchasing
                     </div>
-                    <div class="p-6 text-gray-900">
+                    <div
+                        v-if="$page.props.auth.user.role === 'Admin'"
+                        class="p-6 text-gray-900"
+                    >
                         <PrimaryButton @click="($event) => openModal(1)">
                             Add
                         </PrimaryButton>
@@ -238,6 +243,7 @@ watch(
                     id="product"
                     ref="nameInput"
                     v-model="form.product"
+                    :disabled="isEditMode"
                     class="mt-1 block w-3/4 rounded-md border-gray-300 shadow-sm focus:ring focus:ring-indigo-200"
                 >
                     <option value="" disabled>Select a product</option>
@@ -263,6 +269,7 @@ watch(
                     type="text"
                     class="mt-1 block w-3/4"
                     placeholder="Quantity"
+                    :readonly="isEditMode"
                 ></TextInput>
                 <InputError
                     :message="form.errors.quantity"

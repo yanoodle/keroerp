@@ -6,6 +6,7 @@ use App\Models\Purchasing;
 use App\Http\Requests\StorePurchasingRequest;
 use App\Http\Requests\UpdatePurchasingRequest;
 use App\Models\Products;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class PurchasingController extends Controller
@@ -34,9 +35,20 @@ class PurchasingController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StorePurchasingRequest $request)
+    public function store(Request $request)
     {
-        
+        $request->validate([
+            'product' => 'required',
+            'quantity' => 'required|integer',
+            'price' => 'required|numeric',
+            'status' => 'required'
+        ]);
+    
+        $purchaseData = $request->only(['product', 'quantity', 'price', 'status']);
+    
+        Purchasing::create($purchaseData);
+    
+        return redirect('purchase');
     }
 
     /**
@@ -58,16 +70,26 @@ class PurchasingController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdatePurchasingRequest $request, Purchasing $purchasing)
+    public function update(Request $request, Purchasing $purchase)
     {
-        //
+        $request->validate([
+            'product' => 'required',
+            'quantity' => 'required|integer',
+            'price' => 'required|numeric',
+            'status' => 'required'
+        ]);
+    
+        $purchase->update($request->all());
+    
+        return redirect('purchase');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Purchasing $purchasing)
+    public function destroy(Purchasing $purchase)
     {
-        //
+        $purchase->delete();
+        return redirect('purchase');
     }
 }
