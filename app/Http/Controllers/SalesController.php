@@ -6,6 +6,7 @@ use App\Models\Sales;
 use App\Http\Requests\StoreSalesRequest;
 use App\Http\Requests\UpdateSalesRequest;
 use App\Models\Products;
+use App\Models\RefundItem;
 use App\Models\Purchasing;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -87,29 +88,55 @@ class SalesController extends Controller
             'price' => 'required|numeric',
             'status' => 'required'
         ]);
-
+    
         $product = Products::where('name', $request->product)->first();
-
+    
         if (!$product) {
             return redirect('sales')->withErrors('Product not found.');
         }
-
-        // Calculate quantity difference between old and new
+    
         $qtyDiff = (int)$request->quantity - $sale->quantity;
-
-        // Update in-demand qty accordingly
         $product->in_demand_qty += $qtyDiff;
-        if ($product->in_demand_qty < 0) {
-            $product->in_demand_qty = 0;
+    
+        if (
+            in_array($request->status, ['Cancelled', 'Refunded', 'Shipped']) &&
+            in_array($sale->status, ['Pending', 'Approved'])
+        ) {
+            $product->in_demand_qty -= $sale->quantity;
+            if ($product->in_demand_qty < 0) {
+                $product->in_demand_qty = 0;
+            }
         }
+    
+        if ($request->status === 'Shipped' && $sale->status !== 'Shipped') {
+            $product->base_qty -= (int)$request->quantity;
+            if ($product->base_qty < 0) {
+                $product->base_qty = 0;
+            }
+        }
+    
         $product->save();
-
-        // Update the sale record
+    
+        if ($request->status === 'Refunded') {
+            $refundItem = RefundItem::where('name', $request->product)->first();
+    
+            if ($refundItem) {
+                $refundItem->increment('qty', (int)$request->quantity);
+                $refundItem->description = 'Refunded from sale ID: ' . $sale->id;
+                $refundItem->save();
+            } else {
+                RefundItem::create([
+                    'name' => $request->product,
+                    'qty' => (int)$request->quantity,
+                    'description' => 'Refunded from sale ID: ' . $sale->id,
+                    'status' => 'Pending',
+                ]);
+            }
+        }
+    
         $sale->update($request->all());
-
-        // Adjust purchasing based on new demand
         $this->adjustPurchasing($product);
-
+    
         return redirect('sales');
     }
 

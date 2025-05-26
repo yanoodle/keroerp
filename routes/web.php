@@ -4,6 +4,7 @@ use App\Http\Controllers\InventoriesController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PurchasingController;
 use App\Http\Controllers\SalesController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -17,9 +18,9 @@ Route::get('/', function () {
     ]);
 });
 
-Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -33,6 +34,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/inventories', [InventoriesController::class, 'index'])->name('inventories');
     Route::resource('purchase', PurchasingController::class);
     Route::get('/purchase', [PurchasingController::class, 'index'])->name('purchase');
+
+    Route::put('/refund-items/{item}/add', [InventoriesController::class, 'processRefund'])->name('refund-items.add');
+    Route::delete('/inventories/refund-items/{id}', [InventoriesController::class, 'deleteRefundItem'])->name('inventories.refund-items.destroy');
+
 });
 
 require __DIR__.'/auth.php';

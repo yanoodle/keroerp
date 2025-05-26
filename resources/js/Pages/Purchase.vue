@@ -119,6 +119,92 @@ watch(
 );
 
 const isEditMode = computed(() => title.value === "Edit Entry");
+
+const updateStatus = (purchase, newStatus) => {
+    Swal.fire({
+        title: `Change status to ${newStatus}?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const statusForm = useForm({
+                product: purchase.product,
+                quantity: purchase.quantity,
+                price: purchase.price,
+                status: newStatus,
+            });
+
+            statusForm.put(route("purchase.update", purchase.id), {
+                onSuccess: () => {
+                    purchase.status = newStatus;
+                    Swal.fire({
+                        title: `${newStatus} successfully!`,
+                        icon: "success",
+                    });
+                },
+                onError: () => {
+                    Swal.fire({
+                        title: "Error updating status",
+                        icon: "error",
+                    });
+                },
+            });
+        }
+    });
+};
+
+const dateSortOrder = ref("asc");
+
+const toggleDateSort = () => {
+    dateSortOrder.value = dateSortOrder.value === "asc" ? "desc" : "asc";
+};
+
+const searchQuery = ref("");
+const statusFilter = ref("");
+
+const filteredPurchase = computed(() => {
+    let filtered = props.purchases.filter((purchase) => {
+        const matchesSearch =
+            purchase.product
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            purchase.status
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            new Date(purchase.created_at)
+                .toLocaleDateString()
+                .includes(searchQuery.value);
+
+        const matchesStatus =
+            statusFilter.value === "" || purchase.status === statusFilter.value;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    filtered.sort((a, b) => {
+        const dateA = new Date(a.created_at);
+        const dateB = new Date(b.created_at);
+        if (dateSortOrder.value === "asc") {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+
+    return filtered;
+});
+
+const statusColors = {
+    Pending: "bg-yellow-100 text-yellow-800",
+    Approved: "bg-blue-100 text-blue-800",
+    Shipped: "bg-indigo-100 text-indigo-800",
+    Received: "bg-purple-100 text-purple-800",
+    Completed: "bg-green-100 text-green-800",
+    Cancelled: "bg-red-100 text-red-800",
+    Refunded: "bg-pink-100 text-pink-800",
+};
 </script>
 
 <template>
@@ -154,6 +240,27 @@ const isEditMode = computed(() => title.value === "Edit Entry");
                 </div>
             </div>
 
+            <div
+                class="m-6 flex flex-wrap gap-4 items-center bg-white p-4 rounded-lg shadow-md max-w-xl mx-auto"
+            >
+                <input
+                    type="text"
+                    placeholder="Search by product, status, or date..."
+                    v-model="searchQuery"
+                    class="flex-grow min-w-[200px] border border-gray-300 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                />
+
+                <select
+                    v-model="statusFilter"
+                    class="w-40 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                >
+                    <option value="">All Statuses</option>
+                    <option value="Pending">Pending</option>
+                    <option value="Approved">Approved</option>
+                    <option value="Completed">Completed</option>
+                </select>
+            </div>
+
             <div class="mt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="relative overflow-x-auto my-4">
                     <table
@@ -164,6 +271,17 @@ const isEditMode = computed(() => title.value === "Edit Entry");
                         >
                             <tr>
                                 <th scope="col" class="px-6 py-3">No</th>
+                                <th
+                                    scope="col"
+                                    class="px-6 py-3 cursor-pointer select-none"
+                                    @click="toggleDateSort"
+                                >
+                                    Date
+                                    <span v-if="dateSortOrder === 'asc'"
+                                        >▲</span
+                                    >
+                                    <span v-else>▼</span>
+                                </th>
                                 <th scope="col" class="px-6 py-3">Product</th>
                                 <th scope="col" class="px-6 py-3">Quantity</th>
                                 <th scope="col" class="px-6 py-3">Price</th>
@@ -174,11 +292,20 @@ const isEditMode = computed(() => title.value === "Edit Entry");
                         </thead>
                         <tbody>
                             <tr
-                                v-for="(inv, i) in purchases"
+                                v-for="(inv, i) in filteredPurchase"
                                 :key="inv.id"
                                 class="bg-white border-b"
                             >
-                                <td class="px-6 py-4">{{ i + 1 }}</td>
+                                <td class="px-6 py-4">
+                                    PO{{ String(i + 1).padStart(3, "0") }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{
+                                        new Date(
+                                            inv.created_at
+                                        ).toLocaleDateString()
+                                    }}
+                                </td>
                                 <th
                                     scope="row"
                                     class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
@@ -189,26 +316,53 @@ const isEditMode = computed(() => title.value === "Edit Entry");
                                 <td class="px-6 py-4">
                                     {{ formatToIDR(inv.price) }}
                                 </td>
-                                <td class="px-6 py-4">
-                                    {{ inv.status }}
-                                </td>
-                                <td class="px-6 py-4">
-                                    <WarningButton
-                                        @click="
-                                            ($event) =>
-                                                openModal(
-                                                    2,
-                                                    inv.product,
-                                                    inv.quantity,
-                                                    inv.price,
-                                                    inv.status,
-                                                    inv.id
-                                                )
-                                        "
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span
+                                        :class="[
+                                            'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
+                                            statusColors[inv.status],
+                                        ]"
                                     >
-                                        Edit
-                                    </WarningButton>
+                                        {{ inv.status }}
+                                    </span>
                                 </td>
+                                <td class="px-6 py-4">
+                                    <template v-if="inv.status === 'Pending'">
+                                        <PrimaryButton
+                                            @click="
+                                                () =>
+                                                    updateStatus(
+                                                        inv,
+                                                        'Approved'
+                                                    )
+                                            "
+                                        >
+                                            ✔ Approve
+                                        </PrimaryButton>
+                                    </template>
+                                    <template
+                                        v-else-if="inv.status === 'Approved'"
+                                    >
+                                        <PrimaryButton
+                                            @click="
+                                                () =>
+                                                    updateStatus(
+                                                        inv,
+                                                        'Completed'
+                                                    )
+                                            "
+                                        >
+                                            ✅ Complete
+                                        </PrimaryButton>
+                                    </template>
+                                    <template v-else>
+                                        <!-- No button or disabled button when status is other than Pending or Approved -->
+                                        <PrimaryButton disabled>
+                                            {{ inv.status }}
+                                        </PrimaryButton>
+                                    </template>
+                                </td>
+
                                 <td class="px-6 py-4">
                                     <DangerButton
                                         @click="($event) => deletePurchase(inv)"

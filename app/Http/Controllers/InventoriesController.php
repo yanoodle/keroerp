@@ -6,6 +6,7 @@ use App\Models\Inventories;
 use App\Http\Requests\StoreInventoriesRequest;
 use App\Http\Requests\UpdateInventoriesRequest;
 use App\Models\Products;
+use App\Models\RefundItem;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -17,7 +18,12 @@ class InventoriesController extends Controller
     public function index()
     {
         $inventories = Products::all();
-        return Inertia::render('Inventory', ['inventories' => $inventories]);
+        $refundItems = RefundItem::all();  // fetch all refund items
+        
+        return Inertia::render('Inventory', [
+            'inventories' => $inventories,
+            'refundItems' => $refundItems,
+        ]);
     }
 
     /**
@@ -132,4 +138,43 @@ class InventoriesController extends Controller
             return redirect('inventories');
         }
     }
+
+
+    public function processRefund(RefundItem $item)
+    {
+        if ($item->status !== 'Pending') {
+            return back()->withErrors(['msg' => 'Refund already processed.']);
+        }
+
+        // Cari produk berdasarkan nama atau ID jika ada relasi
+        $product = Products::where('name', $item->name)->first();
+
+        if (!$product) {
+            return back()->withErrors(['msg' => 'Product not found.']);
+        }
+
+        // Tambah qty ke base_qty
+        $product->base_qty += $item->qty;
+        $product->save();
+
+        // Ubah status refund item
+        $item->status = 'Added';
+        $item->save();
+
+        return back();
+    }
+
+    public function deleteRefundItem($id)
+    {
+        $refundItem = RefundItem::find($id);
+
+        if (!$refundItem) {
+            return back()->withErrors(['msg' => 'Refund item not found.']);
+        }
+
+        $refundItem->delete();
+
+        return back()->with('success', 'Refund item deleted successfully.');
+    }
+
 }
