@@ -20,7 +20,7 @@ const id = ref("");
 
 const props = defineProps({
     inventories: { type: Object },
-    refundItems: { type: Array },  // add this line
+    refundItems: { type: Array }, // add this line
 });
 const form = useForm({
     name: "",
@@ -114,27 +114,27 @@ const formatToIDR = (value) => {
 const updateStatus = (item) => {
     Swal.fire({
         title: `Add refund item to inventory?`,
-        icon: 'question',
+        icon: "question",
         showCancelButton: true,
-        confirmButtonText: 'Yes',
-        cancelButtonText: 'No'
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
     }).then((result) => {
         if (result.isConfirmed) {
             const form = useForm({});
-            form.put(route('refund-items.add', item.id), {
+            form.put(route("refund-items.add", item.id), {
                 onSuccess: () => {
-                    item.status = 'Added';  // Update lokal
+                    item.status = "Added"; // Update lokal
                     Swal.fire({
-                        title: 'Item added successfully!',
-                        icon: 'success'
+                        title: "Item added successfully!",
+                        icon: "success",
                     });
                 },
                 onError: () => {
                     Swal.fire({
-                        title: 'Error updating item.',
-                        icon: 'error'
+                        title: "Error updating item.",
+                        icon: "error",
                     });
-                }
+                },
             });
         }
     });
@@ -150,17 +150,30 @@ const deleteRefundItem = (item) => {
     }).then((result) => {
         if (result.isConfirmed) {
             const deleteForm = useForm({});
-            deleteForm.delete(route("inventories.refund-items.destroy", item.id), {
-                onSuccess: () => {
-                    Swal.fire("Deleted!", "Refund item has been deleted.", "success");
-                    // Remove locally
-                    const index = props.refundItems.findIndex(i => i.id === item.id);
-                    if (index !== -1) props.refundItems.splice(index, 1);
-                },
-                onError: () => {
-                    Swal.fire("Error!", "Failed to delete refund item.", "error");
-                },
-            });
+            deleteForm.delete(
+                route("inventories.refund-items.destroy", item.id),
+                {
+                    onSuccess: () => {
+                        Swal.fire(
+                            "Deleted!",
+                            "Refund item has been deleted.",
+                            "success"
+                        );
+                        // Remove locally
+                        const index = props.refundItems.findIndex(
+                            (i) => i.id === item.id
+                        );
+                        if (index !== -1) props.refundItems.splice(index, 1);
+                    },
+                    onError: () => {
+                        Swal.fire(
+                            "Error!",
+                            "Failed to delete refund item.",
+                            "error"
+                        );
+                    },
+                }
+            );
         }
     });
 };
@@ -171,48 +184,65 @@ const filterOption = ref(""); // new filter select
 const filteredInven = computed(() => {
     let filtered = props.inventories.filter((inventory) => {
         const matchesSearch =
-            inventory.name.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            inventory.description.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
-            new Date(inventory.created_at).toLocaleDateString().includes(searchQuery.value);
+            inventory.name
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            inventory.description
+                .toLowerCase()
+                .includes(searchQuery.value.toLowerCase()) ||
+            new Date(inventory.created_at)
+                .toLocaleDateString()
+                .includes(searchQuery.value);
 
         return matchesSearch;
     });
 
     // Filters for min/max values
     if (filterOption.value === "lowest_base") {
-        const minBase = Math.min(...filtered.map(i => Number(i.base_qty)));
-        return filtered.filter(i => Number(i.base_qty) === minBase);
+        const minBase = Math.min(...filtered.map((i) => Number(i.base_qty)));
+        return filtered.filter((i) => Number(i.base_qty) === minBase);
     }
     if (filterOption.value === "highest_base") {
-        const maxBase = Math.max(...filtered.map(i => Number(i.base_qty)));
-        return filtered.filter(i => Number(i.base_qty) === maxBase);
+        const maxBase = Math.max(...filtered.map((i) => Number(i.base_qty)));
+        return filtered.filter((i) => Number(i.base_qty) === maxBase);
     }
     if (filterOption.value === "lowest_demand") {
-        const minDemand = Math.min(...filtered.map(i => Number(i.in_demand_qty)));
-        return filtered.filter(i => Number(i.in_demand_qty) === minDemand);
+        const minDemand = Math.min(
+            ...filtered.map((i) => Number(i.in_demand_qty))
+        );
+        return filtered.filter((i) => Number(i.in_demand_qty) === minDemand);
     }
     if (filterOption.value === "highest_demand") {
-        const maxDemand = Math.max(...filtered.map(i => Number(i.in_demand_qty)));
-        return filtered.filter(i => Number(i.in_demand_qty) === maxDemand);
+        const maxDemand = Math.max(
+            ...filtered.map((i) => Number(i.in_demand_qty))
+        );
+        return filtered.filter((i) => Number(i.in_demand_qty) === maxDemand);
     }
 
     // New sorting filters:
     if (filterOption.value === "sort_base_asc") {
-        return [...filtered].sort((a, b) => Number(a.base_qty) - Number(b.base_qty));
+        return [...filtered].sort(
+            (a, b) => Number(a.base_qty) - Number(b.base_qty)
+        );
     }
     if (filterOption.value === "sort_base_desc") {
-        return [...filtered].sort((a, b) => Number(b.base_qty) - Number(a.base_qty));
+        return [...filtered].sort(
+            (a, b) => Number(b.base_qty) - Number(a.base_qty)
+        );
     }
     if (filterOption.value === "sort_demand_asc") {
-        return [...filtered].sort((a, b) => Number(a.in_demand_qty) - Number(b.in_demand_qty));
+        return [...filtered].sort(
+            (a, b) => Number(a.in_demand_qty) - Number(b.in_demand_qty)
+        );
     }
     if (filterOption.value === "sort_demand_desc") {
-        return [...filtered].sort((a, b) => Number(b.in_demand_qty) - Number(a.in_demand_qty));
+        return [...filtered].sort(
+            (a, b) => Number(b.in_demand_qty) - Number(a.in_demand_qty)
+        );
     }
 
     return filtered;
 });
-
 </script>
 
 <template>
@@ -228,7 +258,10 @@ const filteredInven = computed(() => {
         <div class="py-12">
             <div class="mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="overflow-hidden bg-white shadow-sm sm:rounded-lg">
-                    <div v-if="$page.props.auth.user.role === 'Admin'" class="p-6 text-gray-900">
+                    <div
+                        v-if="$page.props.auth.user.role === 'Admin'"
+                        class="p-6 text-gray-900"
+                    >
                         <PrimaryButton @click="openModal(1)">
                             Add
                         </PrimaryButton>
@@ -236,28 +269,50 @@ const filteredInven = computed(() => {
                 </div>
             </div>
 
-            <div class="m-6 flex gap-4 items-center bg-white p-4 rounded-lg shadow-md max-w-xl mx-auto">
-                <input type="text" placeholder="Search by name, description, or date..." v-model="searchQuery" class="flex-grow min-w-[200px] border border-gray-300 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-400
-           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition" />
+            <div
+                class="m-6 flex gap-4 items-center bg-white p-4 rounded-lg shadow-md max-w-xl mx-auto"
+            >
+                <input
+                    type="text"
+                    placeholder="Search by name, description, or date..."
+                    v-model="searchQuery"
+                    class="flex-grow min-w-[200px] border border-gray-300 rounded-lg px-4 py-2 text-gray-700 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                />
 
-                <select v-model="filterOption" class="w-48 border border-gray-300 rounded-lg px-4 py-2 text-gray-700
-   focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition">
+                <select
+                    v-model="filterOption"
+                    class="w-48 border border-gray-300 rounded-lg px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                >
                     <option value="">All Items</option>
                     <option value="lowest_base">Lowest Base Qty</option>
                     <option value="highest_base">Highest Base Qty</option>
                     <option value="lowest_demand">Lowest In Demand Qty</option>
-                    <option value="highest_demand">Highest In Demand Qty</option>
-                    <option value="sort_base_asc">Sort Base Qty Ascending</option>
-                    <option value="sort_base_desc">Sort Base Qty Descending</option>
-                    <option value="sort_demand_asc">Sort In Demand Qty Ascending</option>
-                    <option value="sort_demand_desc">Sort In Demand Qty Descending</option>
+                    <option value="highest_demand">
+                        Highest In Demand Qty
+                    </option>
+                    <option value="sort_base_asc">
+                        Sort Base Qty Ascending
+                    </option>
+                    <option value="sort_base_desc">
+                        Sort Base Qty Descending
+                    </option>
+                    <option value="sort_demand_asc">
+                        Sort In Demand Qty Ascending
+                    </option>
+                    <option value="sort_demand_desc">
+                        Sort In Demand Qty Descending
+                    </option>
                 </select>
             </div>
 
             <div class="mt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
                 <div class="relative overflow-x-auto my-4">
-                    <table class="w-full text-sm text-left rtl:text-right text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <table
+                        class="w-full text-sm text-left rtl:text-right text-gray-500"
+                    >
+                        <thead
+                            class="text-xs text-gray-700 uppercase bg-gray-50"
+                        >
                             <tr>
                                 <th scope="col" class="px-6 py-3">No</th>
                                 <th scope="col" class="px-6 py-3">Name</th>
@@ -274,9 +329,16 @@ const filteredInven = computed(() => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(inv, i) in filteredInven" :key="inv.id" class="bg-white border-b">
+                            <tr
+                                v-for="(inv, i) in filteredInven"
+                                :key="inv.id"
+                                class="bg-white border-b"
+                            >
                                 <td class="px-6 py-4">{{ i + 1 }}</td>
-                                <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                                <th
+                                    scope="row"
+                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                                >
                                     {{ inv.name }}
                                 </th>
                                 <td class="px-6 py-4">{{ inv.description }}</td>
@@ -288,27 +350,39 @@ const filteredInven = computed(() => {
                                     {{ formatToIDR(inv.price) }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <WarningButton v-if="$page.props.auth.user.role ===
-                                        'Admin'
-                                        " @click="($event) =>
-        openModal(
-            2,
-            inv.name,
-            inv.description,
-            inv.base_qty,
-            inv.in_demand_qty,
-            inv.price,
-            inv.id
-        )
-        ">
+                                    <WarningButton
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'Admin'
+                                        "
+                                        @click="
+                                            ($event) =>
+                                                openModal(
+                                                    2,
+                                                    inv.name,
+                                                    inv.description,
+                                                    inv.base_qty,
+                                                    inv.in_demand_qty,
+                                                    inv.price,
+                                                    inv.id
+                                                )
+                                        "
+                                    >
                                         Edit
                                     </WarningButton>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <DangerButton v-if="$page.props.auth.user.role ===
-                                        'Admin'
-                                        " @click="($event) => deleteInventory(inv)
-        " type="button" class="text-white bg-red-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2">
+                                    <DangerButton
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'Admin'
+                                        "
+                                        @click="
+                                            ($event) => deleteInventory(inv)
+                                        "
+                                        type="button"
+                                        class="text-white bg-red-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
+                                    >
                                         Delete
                                     </DangerButton>
                                 </td>
@@ -319,15 +393,23 @@ const filteredInven = computed(() => {
             </div>
 
             <div class="mt-10 mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <h3 class="text-lg font-semibold text-gray-800 mb-4">Refund Items</h3>
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                    Refund Items
+                </h3>
                 <div class="relative overflow-x-auto my-4">
-                    <table class="w-full text-sm text-left rtl:text-right text-gray-500">
-                        <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                    <table
+                        class="w-full text-sm text-left rtl:text-right text-gray-500"
+                    >
+                        <thead
+                            class="text-xs text-gray-700 uppercase bg-gray-50"
+                        >
                             <tr>
                                 <th scope="col" class="px-6 py-3">No</th>
                                 <th scope="col" class="px-6 py-3">Date</th>
                                 <th scope="col" class="px-6 py-3">Name</th>
-                                <th scope="col" class="px-6 py-3">Description</th>
+                                <th scope="col" class="px-6 py-3">
+                                    Description
+                                </th>
                                 <th scope="col" class="px-6 py-3">Quantity</th>
                                 <th scope="col" class="px-6 py-3">Status</th>
                                 <th scope="col" class="px-6 py-3"></th>
@@ -335,21 +417,46 @@ const filteredInven = computed(() => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(item, index) in refundItems" :key="item.id" class="bg-white border-b">
+                            <tr
+                                v-for="(item, index) in refundItems"
+                                :key="item.id"
+                                class="bg-white border-b"
+                            >
                                 <td class="px-6 py-4">{{ index + 1 }}</td>
-                                <td class="px-6 py-4">{{ new Date(item.created_at).toLocaleDateString() }}</td>
-                                <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ item.name }}</td>
-                                <td class="px-6 py-4">{{ item.description }}</td>
+                                <td class="px-6 py-4">
+                                    {{
+                                        new Date(
+                                            item.created_at
+                                        ).toLocaleDateString()
+                                    }}
+                                </td>
+                                <td
+                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                                >
+                                    {{ item.name }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ item.description }}
+                                </td>
                                 <td class="px-6 py-4">{{ item.qty }}</td>
                                 <td class="px-6 py-4">{{ item.status }}</td>
                                 <td class="px-6 py-4">
                                     <template v-if="item.status === 'Pending'">
-                                        <PrimaryButton @click="() => updateStatus(item)">Add</PrimaryButton>
+                                        <PrimaryButton
+                                            @click="() => updateStatus(item)"
+                                            >Add</PrimaryButton
+                                        >
                                     </template>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <DangerButton v-if="$page.props.auth.user.role === 'Admin'"
-                                        @click="() => deleteRefundItem(item)" class="ml-2">
+                                    <DangerButton
+                                        v-if="
+                                            $page.props.auth.user.role ===
+                                            'Admin'
+                                        "
+                                        @click="() => deleteRefundItem(item)"
+                                        class="ml-2"
+                                    >
                                         Reject
                                     </DangerButton>
                                 </td>
@@ -364,36 +471,86 @@ const filteredInven = computed(() => {
             <h2 class="p-3 text-lg font.medium text-gray-900">{{ title }}</h2>
             <div class="p-3 mt-6">
                 <InputLabel for="name" value="Name"></InputLabel>
-                <TextInput id="name" ref="nameInput" v-model="form.name" type="text" class="mt-1 block w-3/4"
-                    placeholder="Name"></TextInput>
-                <InputError :message="form.errors.name" class="mt-2"></InputError>
+                <TextInput
+                    id="name"
+                    ref="nameInput"
+                    v-model="form.name"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Name"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.name"
+                    class="mt-2"
+                ></InputError>
             </div>
             <div class="p-3">
                 <InputLabel for="description" value="Description"></InputLabel>
-                <TextInput id="description" ref="nameInput" v-model="form.description" type="text" class="mt-1 block w-3/4"
-                    placeholder="Description"></TextInput>
-                <InputError :message="form.errors.description" class="mt-2"></InputError>
+                <TextInput
+                    id="description"
+                    ref="nameInput"
+                    v-model="form.description"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Description"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.description"
+                    class="mt-2"
+                ></InputError>
             </div>
             <div class="p-3">
                 <InputLabel for="base_qty" value="Base Qty"></InputLabel>
-                <TextInput id="base_qty" ref="nameInput" v-model="form.base_qty" type="text" class="mt-1 block w-3/4"
-                    placeholder="Base Qty"></TextInput>
-                <InputError :message="form.errors.base_qty" class="mt-2"></InputError>
+                <TextInput
+                    id="base_qty"
+                    ref="nameInput"
+                    v-model="form.base_qty"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Base Qty"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.base_qty"
+                    class="mt-2"
+                ></InputError>
             </div>
             <div class="p-3">
-                <InputLabel for="in_demand_qty" value="In Demand Qty"></InputLabel>
-                <TextInput id="in_demand_qty" ref="nameInput" v-model="form.in_demand_qty" type="text"
-                    class="mt-1 block w-3/4" placeholder="In Demand Qty"></TextInput>
-                <InputError :message="form.errors.in_demand_qty" class="mt-2"></InputError>
+                <InputLabel
+                    for="in_demand_qty"
+                    value="In Demand Qty"
+                ></InputLabel>
+                <TextInput
+                    id="in_demand_qty"
+                    ref="nameInput"
+                    v-model="form.in_demand_qty"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="In Demand Qty"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.in_demand_qty"
+                    class="mt-2"
+                ></InputError>
             </div>
             <div class="p-3">
                 <InputLabel for="price" value="Price"></InputLabel>
-                <TextInput id="price" ref="nameInput" v-model="form.price" type="text" class="mt-1 block w-3/4"
-                    placeholder="Price"></TextInput>
-                <InputError :message="form.errors.price" class="mt-2"></InputError>
+                <TextInput
+                    id="price"
+                    ref="nameInput"
+                    v-model="form.price"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Price"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.price"
+                    class="mt-2"
+                ></InputError>
             </div>
             <div class="p-3 mt-6">
-                <PrimaryButton :disabled="form.processing" @click="save">Save</PrimaryButton>
+                <PrimaryButton :disabled="form.processing" @click="save"
+                    >Save</PrimaryButton
+                >
             </div>
         </Modal>
     </AuthenticatedLayout>

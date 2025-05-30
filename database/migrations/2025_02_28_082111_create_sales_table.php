@@ -16,7 +16,10 @@ return new class extends Migration
             $table->string('product');
             $table->integer('quantity');
             $table->bigInteger('price');
-            $table->enum('status', ['Pending', 'Approved', 'Shipped', 'Received', 'Completed', 'Canceled', 'Refunded']);
+            $table->string('customer_name');
+            $table->string('customer_email');
+            $table->string('customer_address');
+            $table->enum('status', ['Pending', 'Approved', 'Paid', 'Shipped', 'Received', 'Completed', 'Canceled', 'Refunded']);
             $table->timestamps();
         });
     }

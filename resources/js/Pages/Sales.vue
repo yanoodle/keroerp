@@ -26,6 +26,9 @@ const form = useForm({
     product: "",
     quantity: "",
     price: "",
+    customer_name: "",
+    customer_email: "",
+    customer_address: "",
     status: "Pending",
 });
 const formPage = useForm({});
@@ -44,6 +47,9 @@ const openModal = (op, product, quantity, price, status, sale) => {
         form.product = product;
         form.quantity = quantity;
         form.price = price;
+        form.customer_name = customer_name;
+        form.customer_email = customer_email;
+        form.customer_address = customer_address;
         form.status = status;
     }
 };
@@ -181,7 +187,6 @@ const filteredSales = computed(() => {
         return matchesSearch && matchesStatus;
     });
 
-    // Sort by date
     filtered.sort((a, b) => {
         const dateA = new Date(a.created_at);
         const dateB = new Date(b.created_at);
@@ -194,9 +199,10 @@ const filteredSales = computed(() => {
 const statusColors = {
     Pending: "bg-yellow-100 text-yellow-800",
     Approved: "bg-blue-100 text-blue-800",
-    Shipped: "bg-indigo-100 text-indigo-800",
-    Received: "bg-purple-100 text-purple-800",
-    Completed: "bg-green-100 text-green-800",
+    Paid: "bg-indigo-100 text-indigo-800",
+    Shipped: "bg-purple-100 text-purple-800",
+    Received: "bg-green-100 text-green-800",
+    Completed: "bg-gray-100 text-gray-800",
     Cancelled: "bg-red-100 text-red-800",
     Refunded: "bg-pink-100 text-pink-800",
 };
@@ -249,6 +255,7 @@ const statusColors = {
                     <option value="">All Statuses</option>
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
+                    <option value="Paid">Paid</option>
                     <option value="Shipped">Shipped</option>
                     <option value="Received">Received</option>
                     <option value="Completed">Completed</option>
@@ -257,41 +264,56 @@ const statusColors = {
                 </select>
             </div>
 
-            <div class="mt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="relative overflow-x-auto my-4">
-                    <table
-                        class="w-full text-sm text-left rtl:text-right text-gray-500"
-                    >
+            <div class="mt-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="relative overflow-x-auto my-6 shadow rounded-lg">
+                    <table class="min-w-full text-sm text-left text-gray-600">
                         <thead
-                            class="text-xs text-gray-700 uppercase bg-gray-50"
+                            class="bg-gray-100 text-xs uppercase text-gray-600 border-b border-gray-300"
                         >
                             <tr>
-                                <th scope="col" class="px-6 py-3">No</th>
+                                <th scope="col" class="px-4 py-3">No</th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-3 cursor-pointer"
+                                    class="px-4 py-3 cursor-pointer select-none"
                                     @click="toggleDateSort"
                                 >
                                     Date
                                     <span v-if="dateSortAsc">▲</span>
                                     <span v-else>▼</span>
                                 </th>
-                                <th scope="col" class="px-6 py-3">Product</th>
-                                <th scope="col" class="px-6 py-3">Quantity</th>
-                                <th scope="col" class="px-6 py-3">Price</th>
-                                <th scope="col" class="px-6 py-3">Status</th>
-                                <th scope="col" class="px-6 py-3"></th>
-                                <th scope="col" class="px-6 py-3"></th>
+                                <th scope="col" class="px-4 py-3">Product</th>
+                                <th scope="col" class="px-4 py-3 text-center">
+                                    Quantity
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-right">
+                                    Price
+                                </th>
+                                <th scope="col" class="px-4 py-3">
+                                    Customer Name
+                                </th>
+                                <th scope="col" class="px-4 py-3">
+                                    Customer Email
+                                </th>
+                                <th scope="col" class="px-4 py-3">
+                                    Customer Address
+                                </th>
+                                <th scope="col" class="px-4 py-3">Status</th>
+                                <th scope="col" class="px-4 py-3"></th>
+                                <th scope="col" class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr
                                 v-for="(inv, i) in filteredSales"
                                 :key="inv.id"
-                                class="bg-white border-b"
+                                class="bg-white border-b last:border-none hover:bg-gray-50 transition"
                             >
-                                <td class="px-6 py-4">{{ i + 1 }}</td>
-                                <td class="px-6 py-4">
+                                <td
+                                    class="px-4 py-3 font-medium text-gray-700 whitespace-nowrap"
+                                >
+                                    {{ i + 1 }}
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     {{
                                         new Date(
                                             inv.created_at
@@ -300,15 +322,33 @@ const statusColors = {
                                 </td>
                                 <th
                                     scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                                    class="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap"
                                 >
                                     {{ inv.product }}
                                 </th>
-                                <td class="px-6 py-4">{{ inv.quantity }}</td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3 text-center">
+                                    {{ inv.quantity }}
+                                </td>
+                                <td class="px-4 py-3 text-right font-mono">
                                     {{ formatToIDR(inv.price) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-4 py-3">
+                                    {{ inv.customer_name }}
+                                </td>
+                                <td class="px-4 py-3 break-words max-w-xs">
+                                    {{ inv.customer_email }}
+                                </td>
+                                <td class="px-4 py-3 max-w-sm">
+                                    <textarea
+                                        readonly
+                                        class="resize w-full rounded-md border border-gray-300 px-2 py-1 text-gray-700 text-sm leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400"
+                                        rows="1"
+                                        @focus="$event.target.rows = 4"
+                                        @blur="$event.target.rows = 1"
+                                        >{{ inv.customer_address }}</textarea
+                                    >
+                                </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
@@ -318,19 +358,18 @@ const statusColors = {
                                         {{ inv.status }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <template v-if="inv.status === 'Pending'">
                                         <PrimaryButton
+                                            class="px-3 py-1 text-sm"
                                             @click="
                                                 () => {
-                                                    // Find the product in inventories by matching the sale product name
                                                     const matchedProduct =
                                                         props.inventories.find(
                                                             (p) =>
                                                                 p.name ===
                                                                 inv.product
                                                         );
-
                                                     if (!matchedProduct) {
                                                         Swal.fire({
                                                             icon: 'error',
@@ -339,8 +378,6 @@ const statusColors = {
                                                         });
                                                         return;
                                                     }
-
-                                                    // Check if base_qty is 0 or less than demand qty
                                                     if (
                                                         matchedProduct.base_qty ===
                                                             0 ||
@@ -354,8 +391,6 @@ const statusColors = {
                                                         });
                                                         return;
                                                     }
-
-                                                    // If all good, proceed to update status
                                                     updateStatus(
                                                         inv,
                                                         'Approved'
@@ -365,9 +400,8 @@ const statusColors = {
                                         >
                                             ✔ Approve
                                         </PrimaryButton>
-
                                         <DangerButton
-                                            class="ml-2"
+                                            class="ml-2 px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -375,7 +409,8 @@ const statusColors = {
                                                         'Cancelled'
                                                     )
                                             "
-                                            >✖ Cancel
+                                        >
+                                            ✖ Cancel
                                         </DangerButton>
                                     </template>
 
@@ -383,14 +418,14 @@ const statusColors = {
                                         v-else-if="inv.status === 'Approved'"
                                     >
                                         <PrimaryButton
+                                            class="px-3 py-1 text-sm"
                                             @click="
-                                                () =>
-                                                    updateStatus(inv, 'Shipped')
+                                                () => updateStatus(inv, 'Paid')
                                             "
-                                            >🚚 Ship</PrimaryButton
+                                            >💰 Paid</PrimaryButton
                                         >
                                         <DangerButton
-                                            class="ml-2"
+                                            class="ml-2 px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -398,14 +433,37 @@ const statusColors = {
                                                         'Cancelled'
                                                     )
                                             "
-                                            >✖ Cancel
-                                        </DangerButton>
+                                            >✖ Cancel</DangerButton
+                                        >
+                                    </template>
+
+                                    <template v-else-if="inv.status === 'Paid'">
+                                        <PrimaryButton
+                                            class="px-3 py-1 text-sm"
+                                            @click="
+                                                () =>
+                                                    updateStatus(inv, 'Shipped')
+                                            "
+                                            >🚚 Ship</PrimaryButton
+                                        >
+                                        <DangerButton
+                                            class="ml-2 px-3 py-1 text-sm"
+                                            @click="
+                                                () =>
+                                                    updateStatus(
+                                                        inv,
+                                                        'Cancelled'
+                                                    )
+                                            "
+                                            >✖ Cancel</DangerButton
+                                        >
                                     </template>
 
                                     <template
                                         v-else-if="inv.status === 'Shipped'"
                                     >
                                         <PrimaryButton
+                                            class="px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -413,14 +471,15 @@ const statusColors = {
                                                         'Received'
                                                     )
                                             "
-                                            >📦 Received
-                                        </PrimaryButton>
+                                            >📦 Received</PrimaryButton
+                                        >
                                     </template>
 
                                     <template
                                         v-else-if="inv.status === 'Received'"
                                     >
                                         <PrimaryButton
+                                            class="px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -428,10 +487,10 @@ const statusColors = {
                                                         'Completed'
                                                     )
                                             "
-                                            >✅ Complete
-                                        </PrimaryButton>
+                                            >✅ Complete</PrimaryButton
+                                        >
                                         <DangerButton
-                                            class="ml-2"
+                                            class="ml-2 px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -439,16 +498,15 @@ const statusColors = {
                                                         'Refunded'
                                                     )
                                             "
-                                            >↩ Refund
-                                        </DangerButton>
+                                            >↩ Refund</DangerButton
+                                        >
                                     </template>
                                 </td>
-
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <DangerButton
+                                        class="text-white bg-red-600 hover:bg-red-700 focus:ring-red-300 rounded-md px-3 py-1 text-sm"
                                         @click="($event) => deleteSale(inv)"
                                         type="button"
-                                        class="text-white bg-red-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
                                     >
                                         Delete
                                     </DangerButton>
@@ -525,6 +583,59 @@ const statusColors = {
                     class="mt-2"
                 ></InputError>
             </div>
+            <div class="p-3 mt-6">
+                <InputLabel
+                    for="customer_name"
+                    value="Customer Name"
+                ></InputLabel>
+                <TextInput
+                    id="customer_name"
+                    ref="nameInput"
+                    v-model="form.customer_name"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Customer Name"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.customer_name"
+                    class="mt-2"
+                ></InputError>
+            </div>
+            <div class="p-3 mt-6">
+                <InputLabel
+                    for="customer_email"
+                    value="Customer Email"
+                ></InputLabel>
+                <TextInput
+                    id="customer_email"
+                    v-model="form.customer_email"
+                    type="email"
+                    class="mt-1 block w-3/4"
+                    placeholder="Customer Email"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.customer_email"
+                    class="mt-2"
+                ></InputError>
+            </div>
+            <div class="p-3 mt-6">
+                <InputLabel
+                    for="customer_address"
+                    value="Customer Address"
+                ></InputLabel>
+                <TextInput
+                    id="customer_address"
+                    ref="nameInput"
+                    v-model="form.customer_address"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Customer Address"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.customer_address"
+                    class="mt-2"
+                ></InputError>
+            </div>
             <div class="p-3" v-if="title === 'Edit Entry'">
                 <InputLabel for="status" value="Status"></InputLabel>
                 <select
@@ -533,6 +644,7 @@ const statusColors = {
                     class="mt-1 block w-3/4 rounded-md border-gray-300 shadow-sm focus:ring focus:ring-indigo-200"
                 >
                     <option value="" disabled>Select a status</option>
+                    <option value="Paid">Paid</option>
                     <option value="Shipped">Shipped</option>
                     <option value="Received">Received</option>
                     <option value="Completed">Completed</option>

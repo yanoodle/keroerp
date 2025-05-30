@@ -43,10 +43,13 @@ class SalesController extends Controller
             'product' => 'required',
             'quantity' => 'required|integer',
             'price' => 'required|numeric',
+            'customer_name' => 'required',
+            'customer_email' => 'required',
+            'customer_address' => 'required',
             'status' => 'required'
         ]);
 
-        $saleData = $request->only(['product', 'quantity', 'price', 'status']);
+        $saleData = $request->only(['product', 'quantity', 'price', 'customer_name', 'customer_email', 'customer_address', 'status']);
         Sales::create($saleData);
 
         $product = Products::where('name', $request->product)->first();
@@ -148,14 +151,12 @@ class SalesController extends Controller
         $product = Products::where('name', $sale->product)->first();
 
         if ($product) {
-            // Reduce in-demand quantity
             $product->in_demand_qty -= $sale->quantity;
             if ($product->in_demand_qty < 0) {
                 $product->in_demand_qty = 0;
             }
             $product->save();
 
-            // Adjust purchasing accordingly
             $this->adjustPurchasing($product);
         }
 
@@ -166,22 +167,18 @@ class SalesController extends Controller
 
     private function adjustPurchasing(Products $product)
     {
-        // Calculate how much needs to be purchased
         $needed = $product->in_demand_qty - $product->base_qty;
 
-        // Find existing pending purchasing entry for the product
         $purchasing = Purchasing::where('product', $product->name)
             ->where('status', 'Pending')
             ->first();
 
         if ($needed > 0) {
             if ($purchasing) {
-                // Update existing purchasing quantity
                 $purchasing->quantity = $needed;
                 $purchasing->price = $product->price;
                 $purchasing->save();
             } else {
-                // Create new purchasing entry
                 Purchasing::create([
                     'product' => $product->name,
                     'quantity' => $needed,
@@ -190,7 +187,6 @@ class SalesController extends Controller
                 ]);
             }
         } else {
-            // No need to purchase, delete existing pending purchasing if any
             if ($purchasing) {
                 $purchasing->delete();
             }
