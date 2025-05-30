@@ -311,7 +311,7 @@ const statusColors = {
                                 <td
                                     class="px-4 py-3 font-medium text-gray-700 whitespace-nowrap"
                                 >
-                                    {{ i + 1 }}
+                                    SO{{ String(i + 1).padStart(3, "0") }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     {{

@@ -452,6 +452,11 @@ const filteredInven = computed(() => {
                                 <td class="px-6 py-4">
                                     <template v-if="item.status === 'Pending'">
                                         <PrimaryButton
+                                            v-if="
+                                                $page.props.auth.user.role ===
+                                                    'Admin' &&
+                                                item.status === 'Pending'
+                                            "
                                             @click="() => updateStatus(item)"
                                             >Add</PrimaryButton
                                         >
