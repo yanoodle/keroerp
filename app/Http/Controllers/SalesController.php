@@ -91,57 +91,63 @@ class SalesController extends Controller
             'price' => 'required|numeric',
             'status' => 'required'
         ]);
-    
+
         $product = Products::where('name', $request->product)->first();
-    
+
         if (!$product) {
             return redirect('sales')->withErrors('Product not found.');
         }
-    
-        $qtyDiff = (int)$request->quantity - $sale->quantity;
-        $product->in_demand_qty += $qtyDiff;
-    
+
+        $newQty = (int)$request->quantity;
+        $oldQty = $sale->quantity;
+        $qtyDiff = $newQty - $oldQty;
+
+        if ($sale->status === 'Pending' || $sale->status === 'Approved') {
+            $product->in_demand_qty += $qtyDiff;
+        }
+
         if (
-            in_array($request->status, ['Cancelled', 'Refunded', 'Shipped']) &&
-            in_array($sale->status, ['Pending', 'Approved'])
+            in_array($request->status, ['Canceled', 'Refunded']) &&
+            in_array($sale->status, ['Pending', 'Approved', 'Paid'])
         ) {
-            $product->in_demand_qty -= $sale->quantity;
-            if ($product->in_demand_qty < 0) {
-                $product->in_demand_qty = 0;
-            }
+            $product->in_demand_qty -= $oldQty;
+        } elseif (
+            $request->status === 'Shipped' &&
+            !in_array($sale->status, ['Shipped', 'Completed', 'Refunded'])
+        ) {
+            $product->base_qty -= $newQty;
+            $product->in_demand_qty -= $newQty;
         }
-    
-        if ($request->status === 'Shipped' && $sale->status !== 'Shipped') {
-            $product->base_qty -= (int)$request->quantity;
-            if ($product->base_qty < 0) {
-                $product->base_qty = 0;
-            }
-        }
-    
+
+        $product->in_demand_qty = max(0, $product->in_demand_qty);
+        $product->base_qty = max(0, $product->base_qty);
         $product->save();
-    
+
         if ($request->status === 'Refunded') {
             $refundItem = RefundItem::where('name', $request->product)->first();
-    
+
             if ($refundItem) {
-                $refundItem->increment('qty', (int)$request->quantity);
+                $refundItem->increment('qty', $newQty);
                 $refundItem->description = 'Refunded from sale ID: ' . $sale->id;
                 $refundItem->save();
             } else {
                 RefundItem::create([
                     'name' => $request->product,
-                    'qty' => (int)$request->quantity,
+                    'qty' => $newQty,
                     'description' => 'Refunded from sale ID: ' . $sale->id,
                     'status' => 'Pending',
                 ]);
             }
         }
-    
+
         $sale->update($request->all());
+
         $this->adjustPurchasing($product);
-    
+
         return redirect('sales');
     }
+
+
 
     /**
      * Remove the specified resource from storage.
@@ -169,6 +175,10 @@ class SalesController extends Controller
     {
         $needed = $product->in_demand_qty - $product->base_qty;
 
+        $unitBuyPrice = $product->buy_price > 0 ? $product->buy_price : 100;
+
+        $totalPrice = round($unitBuyPrice * $needed, 2);
+
         $purchasing = Purchasing::where('product', $product->name)
             ->where('status', 'Pending')
             ->first();
@@ -176,13 +186,13 @@ class SalesController extends Controller
         if ($needed > 0) {
             if ($purchasing) {
                 $purchasing->quantity = $needed;
-                $purchasing->price = $product->price;
+                $purchasing->price = $totalPrice;
                 $purchasing->save();
             } else {
                 Purchasing::create([
                     'product' => $product->name,
                     'quantity' => $needed,
-                    'price' => $product->price,
+                    'price' => $totalPrice,
                     'status' => 'Pending',
                 ]);
             }

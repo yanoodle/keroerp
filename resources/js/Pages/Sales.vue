@@ -110,7 +110,7 @@ const formatToIDR = (value) => {
 const productMap = computed(() => {
     const map = {};
     props.inventories.forEach((product) => {
-        map[product.name] = product.price;
+        map[product.name] = product.sell_price;
     });
     return map;
 });
@@ -203,7 +203,7 @@ const statusColors = {
     Shipped: "bg-purple-100 text-purple-800",
     Received: "bg-green-100 text-green-800",
     Completed: "bg-gray-100 text-gray-800",
-    Cancelled: "bg-red-100 text-red-800",
+    Canceled: "bg-red-100 text-red-800",
     Refunded: "bg-pink-100 text-pink-800",
 };
 </script>
@@ -259,7 +259,7 @@ const statusColors = {
                     <option value="Shipped">Shipped</option>
                     <option value="Received">Received</option>
                     <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
+                    <option value="Canceled">Canceled</option>
                     <option value="Refunded">Refunded</option>
                 </select>
             </div>
@@ -406,7 +406,7 @@ const statusColors = {
                                                 () =>
                                                     updateStatus(
                                                         inv,
-                                                        'Cancelled'
+                                                        'Canceled'
                                                     )
                                             "
                                         >
@@ -430,7 +430,7 @@ const statusColors = {
                                                 () =>
                                                     updateStatus(
                                                         inv,
-                                                        'Cancelled'
+                                                        'Canceled'
                                                     )
                                             "
                                             >✖ Cancel</DangerButton
@@ -452,7 +452,7 @@ const statusColors = {
                                                 () =>
                                                     updateStatus(
                                                         inv,
-                                                        'Cancelled'
+                                                        'Canceled'
                                                     )
                                             "
                                             >✖ Cancel</DangerButton

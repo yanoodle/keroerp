@@ -17,7 +17,10 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->integer('base_qty');
             $table->integer('in_demand_qty');
-            $table->bigInteger('price');
+            $table->string('vendor_name');
+            $table->string('vendor_contact');
+            $table->bigInteger('sell_price');
+            $table->bigInteger('buy_price');
             $table->timestamps();
         });
     }

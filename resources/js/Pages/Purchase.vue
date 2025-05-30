@@ -104,7 +104,7 @@ const formatToIDR = (value) => {
 const productMap = computed(() => {
     const map = {};
     props.inventories.forEach((product) => {
-        map[product.name] = product.price;
+        map[product.name] = product.sell_price;
     });
     return map;
 });
@@ -199,12 +199,24 @@ const filteredPurchase = computed(() => {
 const statusColors = {
     Pending: "bg-yellow-100 text-yellow-800",
     Approved: "bg-blue-100 text-blue-800",
-    Shipped: "bg-indigo-100 text-indigo-800",
-    Received: "bg-purple-100 text-purple-800",
-    Completed: "bg-green-100 text-green-800",
-    Cancelled: "bg-red-100 text-red-800",
+    Paid: "bg-indigo-100 text-indigo-800",
+    Shipped: "bg-purple-100 text-purple-800",
+    Received: "bg-green-100 text-green-800",
+    Completed: "bg-gray-100 text-gray-800",
+    Canceled: "bg-red-100 text-red-800",
     Refunded: "bg-pink-100 text-pink-800",
 };
+
+const vendorInfoMap = computed(() => {
+    const map = {};
+    props.inventories.forEach((product) => {
+        map[product.name] = {
+            vendor_name: product.vendor_name || "-",
+            vendor_contact: product.vendor_contact || "-",
+        };
+    });
+    return map;
+});
 </script>
 
 <template>
@@ -257,23 +269,22 @@ const statusColors = {
                     <option value="">All Statuses</option>
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
+                    <option value="Paid">Paid</option>
                     <option value="Completed">Completed</option>
                 </select>
             </div>
 
-            <div class="mt-4 mx-auto max-w-7xl sm:px-6 lg:px-8">
-                <div class="relative overflow-x-auto my-4">
-                    <table
-                        class="w-full text-sm text-left rtl:text-right text-gray-500"
-                    >
+            <div class="mt-6 mx-auto max-w-7xl sm:px-6 lg:px-8">
+                <div class="relative overflow-x-auto my-6 shadow rounded-lg">
+                    <table class="min-w-full text-sm text-left text-gray-600">
                         <thead
-                            class="text-xs text-gray-700 uppercase bg-gray-50"
+                            class="bg-gray-100 text-xs uppercase text-gray-600 border-b border-gray-300"
                         >
                             <tr>
-                                <th scope="col" class="px-6 py-3">No</th>
+                                <th scope="col" class="px-4 py-3">No</th>
                                 <th
                                     scope="col"
-                                    class="px-6 py-3 cursor-pointer select-none"
+                                    class="px-4 py-3 cursor-pointer select-none"
                                     @click="toggleDateSort"
                                 >
                                     Date
@@ -282,24 +293,36 @@ const statusColors = {
                                     >
                                     <span v-else>▼</span>
                                 </th>
-                                <th scope="col" class="px-6 py-3">Product</th>
-                                <th scope="col" class="px-6 py-3">Quantity</th>
-                                <th scope="col" class="px-6 py-3">Price</th>
-                                <th scope="col" class="px-6 py-3">Status</th>
-                                <th scope="col" class="px-6 py-3"></th>
-                                <th scope="col" class="px-6 py-3"></th>
+                                <th scope="col" class="px-4 py-3">Product</th>
+                                <th scope="col" class="px-4 py-3">
+                                    Vendor Name
+                                </th>
+                                <th scope="col" class="px-4 py-3">
+                                    Vendor Contact
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-center">
+                                    Quantity
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-right">
+                                    Price
+                                </th>
+                                <th scope="col" class="px-4 py-3">Status</th>
+                                <th scope="col" class="px-4 py-3"></th>
+                                <th scope="col" class="px-4 py-3"></th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr
                                 v-for="(inv, i) in filteredPurchase"
                                 :key="inv.id"
-                                class="bg-white border-b"
+                                class="bg-white border-b last:border-none hover:bg-gray-50 transition"
                             >
-                                <td class="px-6 py-4">
+                                <td
+                                    class="px-4 py-3 font-medium text-gray-700 whitespace-nowrap"
+                                >
                                     PO{{ String(i + 1).padStart(3, "0") }}
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     {{
                                         new Date(
                                             inv.created_at
@@ -308,15 +331,29 @@ const statusColors = {
                                 </td>
                                 <th
                                     scope="row"
-                                    class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap"
+                                    class="px-4 py-3 font-semibold text-gray-900 whitespace-nowrap"
                                 >
                                     {{ inv.product }}
                                 </th>
-                                <td class="px-6 py-4">{{ inv.quantity }}</td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3">
+                                    {{
+                                        vendorInfoMap[inv.product]
+                                            ?.vendor_name || "-"
+                                    }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    {{
+                                        vendorInfoMap[inv.product]
+                                            ?.vendor_contact || "-"
+                                    }}
+                                </td>
+                                <td class="px-4 py-3 text-center">
+                                    {{ inv.quantity }}
+                                </td>
+                                <td class="px-4 py-3 text-right font-mono">
                                     {{ formatToIDR(inv.price) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold',
@@ -326,9 +363,10 @@ const statusColors = {
                                         {{ inv.status }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <template v-if="inv.status === 'Pending'">
                                         <PrimaryButton
+                                            class="px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -340,10 +378,23 @@ const statusColors = {
                                             ✔ Approve
                                         </PrimaryButton>
                                     </template>
+
                                     <template
                                         v-else-if="inv.status === 'Approved'"
                                     >
                                         <PrimaryButton
+                                            class="px-3 py-1 text-sm"
+                                            @click="
+                                                () => updateStatus(inv, 'Paid')
+                                            "
+                                        >
+                                            💰 Paid
+                                        </PrimaryButton>
+                                    </template>
+
+                                    <template v-else-if="inv.status === 'Paid'">
+                                        <PrimaryButton
+                                            class="px-3 py-1 text-sm"
                                             @click="
                                                 () =>
                                                     updateStatus(
@@ -355,19 +406,22 @@ const statusColors = {
                                             ✅ Complete
                                         </PrimaryButton>
                                     </template>
+
                                     <template v-else>
-                                        <!-- No button or disabled button when status is other than Pending or Approved -->
-                                        <PrimaryButton disabled>
+                                        <PrimaryButton
+                                            disabled
+                                            class="px-3 py-1 text-sm"
+                                        >
                                             {{ inv.status }}
                                         </PrimaryButton>
                                     </template>
                                 </td>
 
-                                <td class="px-6 py-4">
+                                <td class="px-4 py-3 whitespace-nowrap">
                                     <DangerButton
+                                        class="text-white bg-red-600 hover:bg-red-700 focus:ring-red-300 rounded-md px-3 py-1 text-sm"
                                         @click="($event) => deletePurchase(inv)"
                                         type="button"
-                                        class="text-white bg-red-800 hover:bg-gray-900 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2"
                                     >
                                         Delete
                                     </DangerButton>
@@ -456,11 +510,8 @@ const statusColors = {
                     <option value="" disabled>Select a status</option>
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
-                    <option value="Shipped">Shipped</option>
-                    <option value="Received">Received</option>
+                    <option value="Paid">Paid</option>
                     <option value="Completed">Completed</option>
-                    <option value="Canceled">Canceled</option>
-                    <option value="Refunded">Refunded</option>
                 </select>
                 <InputError
                     :message="form.errors.status"

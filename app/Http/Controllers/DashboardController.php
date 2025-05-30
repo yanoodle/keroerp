@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Products;
+use App\Models\Purchasing;
+use App\Models\Sales;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -9,15 +12,13 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $products = \App\Models\Products::all();
-        $sales = \App\Models\Sales::all();
-        $purchases = \App\Models\Purchasing::all();
+        $products = Products::all();
+        $sales = Sales::all();
+        $purchases = Purchasing::all();
 
-        // Aggregate sales qty per product
         $salesByProduct = $sales->groupBy('product')->map(fn($items) => $items->sum('quantity'));
         $purchaseByProduct = $purchases->groupBy('product')->map(fn($items) => $items->sum('quantity'));
 
-        // Count sales status
         $salesStatus = $sales->groupBy('status')->map(fn($items) => $items->count());
         $purchaseStatus = $purchases->groupBy('status')->map(fn($items) => $items->count());
 

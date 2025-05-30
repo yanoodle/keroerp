@@ -20,14 +20,17 @@ const id = ref("");
 
 const props = defineProps({
     inventories: { type: Object },
-    refundItems: { type: Array }, // add this line
+    refundItems: { type: Array },
 });
 const form = useForm({
     name: "",
     description: "",
     base_qty: "",
     in_demand_qty: "",
-    price: "",
+    vendor_name: "",
+    vendor_contact: "",
+    sell_price: "",
+    buy_price: "",
 });
 const formPage = useForm({});
 const onPageClick = (event) => {
@@ -54,7 +57,10 @@ const openModal = (
         form.description = description;
         form.base_qty = base_qty;
         form.in_demand_qty = in_demand_qty;
-        form.price = price;
+        form.vendor_name = vendor_name;
+        form.vendor_contact = vendor_contact;
+        form.sell_price = sell_price;
+        form.buy_price = buy_price;
     }
 };
 const closeModal = () => {
@@ -123,7 +129,7 @@ const updateStatus = (item) => {
             const form = useForm({});
             form.put(route("refund-items.add", item.id), {
                 onSuccess: () => {
-                    item.status = "Added"; // Update lokal
+                    item.status = "Added";
                     Swal.fire({
                         title: "Item added successfully!",
                         icon: "success",
@@ -159,7 +165,6 @@ const deleteRefundItem = (item) => {
                             "Refund item has been deleted.",
                             "success"
                         );
-                        // Remove locally
                         const index = props.refundItems.findIndex(
                             (i) => i.id === item.id
                         );
@@ -179,7 +184,7 @@ const deleteRefundItem = (item) => {
 };
 
 const searchQuery = ref("");
-const filterOption = ref(""); // new filter select
+const filterOption = ref("");
 
 const filteredInven = computed(() => {
     let filtered = props.inventories.filter((inventory) => {
@@ -197,7 +202,6 @@ const filteredInven = computed(() => {
         return matchesSearch;
     });
 
-    // Filters for min/max values
     if (filterOption.value === "lowest_base") {
         const minBase = Math.min(...filtered.map((i) => Number(i.base_qty)));
         return filtered.filter((i) => Number(i.base_qty) === minBase);
@@ -219,7 +223,6 @@ const filteredInven = computed(() => {
         return filtered.filter((i) => Number(i.in_demand_qty) === maxDemand);
     }
 
-    // New sorting filters:
     if (filterOption.value === "sort_base_asc") {
         return [...filtered].sort(
             (a, b) => Number(a.base_qty) - Number(b.base_qty)
@@ -323,7 +326,10 @@ const filteredInven = computed(() => {
                                 <th scope="col" class="px-6 py-3">
                                     In Demand Qty
                                 </th>
-                                <th scope="col" class="px-6 py-3">Price</th>
+                                <th scope="col" class="px-6 py-3">
+                                    Sell Price
+                                </th>
+                                <th scope="col" class="px-6 py-3">Buy Price</th>
                                 <th scope="col" class="px-6 py-3"></th>
                                 <th scope="col" class="px-6 py-3"></th>
                             </tr>
@@ -347,7 +353,10 @@ const filteredInven = computed(() => {
                                     {{ inv.in_demand_qty }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    {{ formatToIDR(inv.price) }}
+                                    {{ formatToIDR(inv.sell_price) }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    {{ formatToIDR(inv.buy_price) }}
                                 </td>
                                 <td class="px-6 py-4">
                                     <WarningButton
@@ -452,7 +461,8 @@ const filteredInven = computed(() => {
                                     <DangerButton
                                         v-if="
                                             $page.props.auth.user.role ===
-                                            'Admin'
+                                                'Admin' &&
+                                            item.status === 'Pending'
                                         "
                                         @click="() => deleteRefundItem(item)"
                                         class="ml-2"
@@ -533,17 +543,65 @@ const filteredInven = computed(() => {
                 ></InputError>
             </div>
             <div class="p-3">
-                <InputLabel for="price" value="Price"></InputLabel>
+                <InputLabel for="vendor_name" value="Vendor Name"></InputLabel>
                 <TextInput
-                    id="price"
+                    id="vendor_name"
                     ref="nameInput"
-                    v-model="form.price"
+                    v-model="form.vendor_name"
                     type="text"
                     class="mt-1 block w-3/4"
-                    placeholder="Price"
+                    placeholder="Vendor Name"
                 ></TextInput>
                 <InputError
-                    :message="form.errors.price"
+                    :message="form.errors.vendor_name"
+                    class="mt-2"
+                ></InputError>
+            </div>
+            <div class="p-3">
+                <InputLabel
+                    for="vendor_contact"
+                    value="Vendor Contact"
+                ></InputLabel>
+                <TextInput
+                    id="vendor_contact"
+                    ref="nameInput"
+                    v-model="form.vendor_contact"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Vendor Contact"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.vendor_contact"
+                    class="mt-2"
+                ></InputError>
+            </div>
+            <div class="p-3">
+                <InputLabel for="sell_price" value="Sell Price"></InputLabel>
+                <TextInput
+                    id="sell_price"
+                    ref="nameInput"
+                    v-model="form.sell_price"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Sell Price"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.sell_price"
+                    class="mt-2"
+                ></InputError>
+            </div>
+            <div class="p-3">
+                <InputLabel for="buy_price" value="Buy Price"></InputLabel>
+                <TextInput
+                    id="buy_price"
+                    ref="nameInput"
+                    v-model="form.buy_price"
+                    type="text"
+                    class="mt-1 block w-3/4"
+                    placeholder="Buy Price"
+                ></TextInput>
+                <InputError
+                    :message="form.errors.buy_price"
                     class="mt-2"
                 ></InputError>
             </div>

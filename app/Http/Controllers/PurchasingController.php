@@ -81,11 +81,9 @@ class PurchasingController extends Controller
     
         $purchase->update($request->all());
     
-        // If status is Completed, update the product's base_qty
         if ($request->status === 'Completed') {
             $product = Products::where('name', $purchase->product)->first();
             if ($product) {
-                // Add purchased quantity to product's base_qty
                 $product->base_qty += $purchase->quantity;
                 $product->save();
             }

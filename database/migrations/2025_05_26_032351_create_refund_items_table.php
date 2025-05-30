@@ -13,6 +13,10 @@ return new class extends Migration
     {
         Schema::create('refund_items', function (Blueprint $table) {
             $table->id();
+            $table->string('name')->unique();
+            $table->text('description')->nullable();
+            $table->integer('qty');
+            $table->enum('status', ['Pending', 'Added']);
             $table->timestamps();
         });
     }
