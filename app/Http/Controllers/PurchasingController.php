@@ -86,6 +86,26 @@ class PurchasingController extends Controller
         'status' => 'required',
     ];
 
+$product = Products::where('name', $purchase->product)->first();
+
+if ($oldStatus === 'Pending' && $request->status === 'Approved') {
+    $totalPlannedQty = $product->base_qty + $product->in_demand_qty + $purchase->quantity;
+
+    if ($totalPlannedQty > 200) {
+        // Hitung quantity yang pas agar total stok jadi 200
+        $allowedQty = 200 - ($product->base_qty + $product->in_demand_qty);
+
+        // Set quantity purchase sesuai kapasitas tersisa
+        $purchase->quantity = $allowedQty;
+
+        // Optional: kirim flash message ke user
+        session()->flash('info', "Quantity disesuaikan menjadi {$allowedQty} agar stok pas 200.");
+    }
+
+    $product->in_demand_qty += $purchase->quantity;
+}
+
+
     if ($request->status === 'Paid') {
         $rules['payment_proof'] = 'required|image|mimes:jpg,jpeg,png|max:2048';
         $rules['payment_proof_desc'] = 'nullable|string|max:255';

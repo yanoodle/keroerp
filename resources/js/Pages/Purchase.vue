@@ -123,45 +123,71 @@ watch(
 const isEditMode = computed(() => title.value === "Edit Entry");
 
 const updateStatus = (purchase, newStatus) => {
-    Swal.fire({
-        title: `Change status to ${newStatus}?`,
-        icon: "question",
-        showCancelButton: true,
-        confirmButtonText: "Yes",
-        cancelButtonText: "No",
-    }).then((result) => {
-        if (result.isConfirmed) {
-            const statusForm = useForm({
-                product: purchase.product,
-                quantity: purchase.quantity,
-                price: purchase.price,
-                status: newStatus,
-            });
+    // Kalau statusnya mau di-Approve, cek stok maksimal
+    if (purchase.status === "Pending" && newStatus === "Approved") {
+        // Cari data produk dari inventories
+        const productData = props.inventories.find(p => p.name === purchase.product);
 
-            statusForm.put(route("purchase.update", purchase.id), {
-                onSuccess: () => {
-                    purchase.status = newStatus;
-                    Swal.fire({
-                        title: `${newStatus} successfully!`,
-                        icon: "success",
-                    });
-                },
-                onError: () => {
-                    // Get first error message from backend
-                    let errorMessage =
-                        Object.values(statusForm.errors)[0] ||
-                        "Error updating status";
+        if (productData) {
+            const totalPlannedQty = productData.base_qty + productData.in_demand_qty + purchase.quantity;
 
-                    Swal.fire({
-                        title: "Error",
-                        text: errorMessage,
-                        icon: "error",
-                    });
-                },
-            });
+            if (totalPlannedQty > 200) {
+                const allowedQty = 200 - (productData.base_qty + productData.in_demand_qty);
+
+                return Swal.fire({
+                    title: "Stok Melebihi Batas",
+                    text: `Stok akan melebihi 200. Quantity akan diubah menjadi ${allowedQty}. Lanjutkan?`,
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Ya, Sesuaikan",
+                    cancelButtonText: "Batal"
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        // Set quantity ke batas maksimal yang diizinkan
+                        purchase.quantity = allowedQty;
+
+                        // Kirim request update
+                        sendStatusUpdate(purchase, newStatus);
+                    }
+                });
+            }
         }
-    });
+    }
+
+    // Kalau bukan approve atau tidak melebihi batas
+    sendStatusUpdate(purchase, newStatus);
 };
+
+// Fungsi terpisah untuk kirim PUT request
+function sendStatusUpdate(purchase, newStatus) {
+    const statusForm = useForm({
+        product: purchase.product,
+        quantity: purchase.quantity,
+        price: purchase.price,
+        status: newStatus,
+    });
+
+    statusForm.put(route("purchase.update", purchase.id), {
+        onSuccess: () => {
+            purchase.status = newStatus;
+            Swal.fire({
+                title: `${newStatus} successfully!`,
+                icon: "success",
+            });
+        },
+        onError: () => {
+            let errorMessage =
+                Object.values(statusForm.errors)[0] ||
+                "Error updating status";
+
+            Swal.fire({
+                title: "Error",
+                text: errorMessage,
+                icon: "error",
+            });
+        },
+    });
+}
 
 const dateSortOrder = ref("asc");
 
@@ -425,7 +451,10 @@ const closeDetailModal = () => {
                     <option value="Pending">Pending</option>
                     <option value="Approved">Approved</option>
                     <option value="Paid">Paid</option>
+                    <option value="Received">Received</option>
                     <option value="Completed">Completed</option>
+                    <option value="Canceled">Canceled</option>
+                    <option value="Deleted">Deleted</option>
                 </select>
             </div>
 
